@@ -10,7 +10,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 import matplotlib.pyplot as plt
 
 import logging
-# logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s : ', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s : ', level=logging.INFO)
 
 data = pd.read_json('./datasets/data.json')
 # 生成词典和语料
@@ -67,64 +67,3 @@ errors = [-mean_squared_error(mt_chapter_topics.T[i], y_pred[i])
 topic_words = [lda.show_topic(k, topn=20) for k in np.argsort(errors)[:3]]
 topic_words = np.unique([word[0] for word in np.concatenate(topic_words)])
 print(topic_words)
-exit(0)
-# 准备数据
-words = np.concatenate(data.words).tolist()
-vectorizer = CountVectorizer()
-tf = vectorizer.fit_transform(words)
-
-# LDA主题分析
-n_topics = 200
-lda = LatentDirichletAllocation(
-    n_components=n_topics, 
-    max_iter=50, 
-    learning_method='online',                 
-    learning_offset=50.)
-lda.fit(tf)
-# 得到每个章节属于某个主题的可能性
-chapter_top = pd.DataFrame(
-    lda.transform(tf),
-    index=range(120),
-    columns=np.arange(n_topics) + 1)
-print(chapter_top)
-exit(0)
-
-
-
-
-# # 生成词典和语料
-# words = data['words'].to_list()
-# dictionary = corpora.Dictionary(words)
-# corpus = [dictionary.doc2bow(text) for text in words]
-# tf_idf = TfidfModel(corpus, dictionary=dictionary)[corpus]
-
-# # LDA计算
-# lda = ldamodel.LdaModel(corpus=tf_idf, id2word=dictionary, num_topics=200)
-
-
-# 词频统计
-words = np.concatenate(data.words)
-words = pd.DataFrame({'words': words})
-frequency = words.groupby(by=['words'])['words'].agg([('frequency', np.size)])
-frequency = frequency.reset_index().sort_values(by='frequency', ascending=False)
-
-# 构建语料库，创建TF-IDF矩阵
-content = [' '.join(word) for word in data.words]
-transformer = TfidfVectorizer()
-tfidf = transformer.fit_transform(content)
-word_vectors = tfidf.toarray()
-# print(word_vectors)
-# LDA分析主题
-n_topics = 200
-lda = LatentDirichletAllocation(
-    n_components=n_topics, 
-    max_iter=50, 
-    learning_method='online',                 
-    learning_offset=50.)
-lda.fit(tfidf)
-# 得到每个章节属于某个主题的可能性
-chapter_top = pd.DataFrame(
-    lda.transform(tfidf),
-    index=range(120),
-    columns=np.arange(n_topics) + 1)
-print(chapter_top)
