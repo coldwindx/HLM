@@ -1,3 +1,4 @@
+import collections
 import numpy as np
 import pandas as pd
 
@@ -16,8 +17,8 @@ data = pd.read_json('./datasets/data.json')
 # 生成词典和语料
 words = data['words'].to_list()
 dictionary = corpora.Dictionary(words)
-dictionary.filter_extremes(no_below=10) # 过滤低频词
-dictionary.compactify()
+# dictionary.filter_extremes(no_below=10) # 过滤低频词
+# dictionary.compactify()
 corpus = [dictionary.doc2bow(text) for text in words]
 tfidf = TfidfModel(corpus, dictionary=dictionary) 
 
@@ -26,7 +27,7 @@ def compute_coherence_values(dictionary, corpus, limit, start=2, step=3):
     coherence_values = []
     model_list = []
     for num_topics in range(start, limit, step):
-        model = ldamodel.LdaModel(corpus=corpus, 
+        model = ldamodel.LdaModel(corpus=tfidf[corpus], 
                             id2word=dictionary, num_topics=num_topics, passes=50)
         model_list.append(model)
         coherencemodel = CoherenceModel(model=model, 
@@ -64,6 +65,10 @@ kmeans = KMeans(n_clusters = 16, random_state=0).fit(mt_chapter_topics.T)
 y_pred = [kmeans.cluster_centers_[i] for i in kmeans.predict(mt_chapter_topics.T)]
 errors = [-mean_squared_error(mt_chapter_topics.T[i], y_pred[i]) 
             for i in range(n_topics)]
-topic_words = [lda.show_topic(k, topn=20) for k in np.argsort(errors)[:3]]
-topic_words = np.unique([word[0] for word in np.concatenate(topic_words)])
-print(topic_words)
+
+topic_words = collections.defaultdict(int)
+for k in np.argsort(errors)[:16]:
+    for topic, prob in lda.show_topic(k, topn=20):
+        topic_words[topic] += prob
+topic_words = sorted(topic_words.items(),key=lambda x:x[1], reverse=True)
+print(*topic_words, sep = '\n')
