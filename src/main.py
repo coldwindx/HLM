@@ -27,7 +27,7 @@ def compute_coherence_values(dictionary, corpus, limit, start=2, step=3):
     coherence_values = []
     model_list = []
     for num_topics in range(start, limit, step):
-        model = ldamodel.LdaModel(corpus=tfidf[corpus], 
+        model = ldamodel.LdaModel(corpus=corpus, 
                             id2word=dictionary, num_topics=num_topics, passes=50)
         model_list.append(model)
         coherencemodel = CoherenceModel(model=model, 
@@ -51,11 +51,11 @@ def compute_coherence_values(dictionary, corpus, limit, start=2, step=3):
 
 # LDA计算
 n_topics = 95
-lda = ldamodel.LdaModel(corpus=tfidf[corpus], 
+lda = ldamodel.LdaModel(corpus=corpus, 
                     id2word=dictionary, 
                     num_topics=n_topics, passes=50)
 chapter_topics = lda.get_document_topics(corpus, minimum_probability=0.01)
-mt_chapter_topics = np.zeros(shape=(120, n_topics), dtype=np.float32)
+mt_chapter_topics = np.zeros(shape=(100, n_topics), dtype=np.float32)
 for i, topics in enumerate(chapter_topics):
     for j, prob in topics:
         mt_chapter_topics[i][j] = prob
